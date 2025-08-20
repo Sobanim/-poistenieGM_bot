@@ -18,6 +18,10 @@ app.post('/webhook', (req, res) => {
     res.sendStatus(200);
 });
 
+app.get('/webhook', (req, res) => {
+    res.send('Webhook endpoint is working!');
+});
+
 app.get('/', (req, res) => {
     res.send('Bot is running!');
 });
@@ -26,4 +30,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-

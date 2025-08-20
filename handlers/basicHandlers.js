@@ -137,5 +137,9 @@ export function handleCallbackQuery(ctx) {
                 }
             });
     }
-    ctx.answerCbQuery();
+    try {
+        ctx.answerCbQuery();
+    } catch (err) {
+        console.error('Ошибка answerCbQuery:', err.message);
+    }
 }
