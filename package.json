@@ -1,0 +1,25 @@
+{
+  "name": "poisteniegm_bot",
+  "version": "1.0.0",
+  "description": "Get more information about health insurance in Slovakia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sobanim/-poistenieGM_bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sobanim/-poistenieGM_bot/issues"
+  },
+  "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "telegraf": "^4.16.3"
+  },
+  "type": "module"
+}
