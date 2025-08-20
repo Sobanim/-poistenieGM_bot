@@ -18,7 +18,9 @@
   },
   "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
   "dependencies": {
+    "body-parser": "^2.2.0",
     "dotenv": "^17.2.1",
+    "express": "^5.1.0",
     "telegraf": "^4.16.3"
   },
   "type": "module"
