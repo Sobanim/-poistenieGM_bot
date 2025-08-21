@@ -4,10 +4,7 @@
   "description": "Get more information about health insurance in Slovakia",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "lint:watch": "eslint . --fix --watch"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -26,8 +23,5 @@
     "express": "^5.1.0",
     "telegraf": "^4.16.3"
   },
-  "type": "module",
-  "devDependencies": {
-    "eslint": "^9.33.0"
-  }
+  "type": "module"
 }
