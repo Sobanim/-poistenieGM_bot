@@ -4,7 +4,7 @@
   "description": "Get more information about health insurance in Slovakia",
   "main": "server.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "dev": "node index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
