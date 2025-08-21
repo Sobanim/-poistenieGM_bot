@@ -15,26 +15,40 @@ export function handleOrderTextMessage(ctx) {
   const userId = ctx.from.id;
   const userState = getUserState(userId);
 
+  console.log(`[DEBUG] handleOrderTextMessage - userId: ${userId}`);
+  console.log(`[DEBUG] userState:`, JSON.stringify(userState, null, 2));
+
   if (!userState || !userState.step) {
+    console.log(`[DEBUG] Пользователь ${userId} не в процессе заказа или нет шага`);
     return false; // Пользователь не в процессе заказа
   }
 
   const messageText = ctx.message?.text;
+  console.log(`[DEBUG] Получено сообщение от ${userId}: "${messageText}", текущий шаг: ${userState.step}`);
+
+  if (!messageText) {
+    console.log(`[DEBUG] Нет текста в сообщении от пользователя ${userId}`);
+    return false;
+  }
 
   switch (userState.step) {
   case orderSteps.ENTERING_FULL_NAME:
+    console.log(`[DEBUG] Обрабатываем ввод имени для пользователя ${userId}`);
     handleFullNameInput(ctx, messageText, userId, userState);
     break;
 
   case orderSteps.ENTERING_AGE:
+    console.log(`[DEBUG] Обрабатываем ввод возраста для пользователя ${userId}`);
     handleAgeInput(ctx, messageText, userId, userState);
     break;
 
   case orderSteps.ENTERING_CONTACT:
+    console.log(`[DEBUG] Обрабатываем ввод контакта для пользователя ${userId}`);
     handleContactInput(ctx, messageText, userId, userState);
     break;
 
   default:
+    console.log(`[DEBUG] Неизвестный шаг: ${userState.step} для пользователя ${userId}`);
     return false;
   }
 

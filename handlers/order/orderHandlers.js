@@ -46,12 +46,19 @@ export function handleOrderStart(ctx) {
 export function handleInsuranceSelection(ctx, insuranceType) {
   const userId = ctx.from.id;
 
+  console.log(`[DEBUG] handleInsuranceSelection - userId: ${userId}, insuranceType: ${insuranceType}`);
+
   // Инициализируем состояние пользователя
-  userStates.set(userId, {
+  const newState = {
     step: orderSteps.ENTERING_FULL_NAME,
     insuranceType: insuranceType,
     data: {}
-  });
+  };
+
+  userStates.set(userId, newState);
+
+  console.log(`[DEBUG] Состояние пользователя ${userId} установлено:`, JSON.stringify(newState, null, 2));
+  console.log(`[DEBUG] Проверяем сохранение - текущее состояние:`, JSON.stringify(userStates.get(userId), null, 2));
 
   const insuranceName = insuranceTypes[insuranceType];
 

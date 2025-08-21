@@ -17,10 +17,15 @@ bot.on('callback_query', handleCallbackQuery);
 
 // Обработка текстовых сообщений (для процесса заказа)
 bot.on('text', (ctx) => {
+  console.log(`[DEBUG] Получено текстовое сообщение от пользователя ${ctx.from.id}: "${ctx.message.text}"`);
+
   // Проверяем, находится ли пользователь в процессе заказа
   const handled = handleOrderTextMessage(ctx);
 
+  console.log(`[DEBUG] Сообщение обработано в процессе заказа: ${handled}`);
+
   if (!handled) {
+    console.log(`[DEBUG] Отправляем стандартный ответ пользователю ${ctx.from.id}`);
     // Если сообщение не обработано в процессе заказа, показываем главное меню
     ctx.reply(
       'Використовуйте кнопки меню для навігації або введіть /start для початку.',
