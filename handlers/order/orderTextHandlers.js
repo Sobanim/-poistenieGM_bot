@@ -5,8 +5,9 @@ import {
   validateContact,
   getUserState,
   updateUserState,
-  clearUserState,
-  insuranceTypes
+  insuranceTypes,
+  finalizeOrder,
+  clearUserState
 } from './orderHandlers.js';
 
 // Обработка текстовых сообщений в процессе заказа
@@ -47,7 +48,7 @@ function handleFullNameInput(ctx, fullName, userId, userState) {
   if (!validation.isValid) {
     ctx.reply(
       `❌ ${validation.error}\n\n` +
-      'Будь ласка, введіть ваше повне ім\'я ще раз (Прізвище Ім\'я По батькові):',
+      'Будь ласка, введіть ваше повне ім\'я ще раз (Прізвище Ім\'я):',
       {
         reply_markup: {
           inline_keyboard: [
@@ -305,37 +306,9 @@ export function handleEditCallbacks(ctx, action) {
 }
 
 // Подтверждение заказа
-export function handleOrderConfirmation(ctx) {
-  const userId = ctx.from.id;
-  const userState = getUserState(userId);
-
-  if (!userState) {
-    ctx.reply('Помилка: дані замовлення не знайдено.');
-    return;
-  }
-
-  const insuranceName = insuranceTypes[userState.insuranceType];
-
-  // Очищаем состояние пользователя
-  clearUserState(userId);
-
-  ctx.reply(
-    '🎉 **Замовлення успішно відправлено!**\n\n' +
-    `Ваша заявка на **${insuranceName}** прийнята в обробку.\n\n` +
-    'Наш менеджер зв\'яжеться з вами найближчим часом для уточнення деталей та завершення оформлення страхування.\n\n' +
-    '📞 Якщо у вас є термінові питання, ви можете звернутися до нашої служби підтримки.',
-    {
-      parse_mode: 'Markdown',
-      reply_markup: {
-        inline_keyboard: [
-          [
-            { text: '🏠 Головне меню', callback_data: 'main_menu' },
-            { text: '📋 Замовити ще одну страховку', callback_data: 'order_insurance' }
-          ]
-        ]
-      }
-    }
-  );
+export async function handleOrderConfirmation(ctx) {
+  // Используем новую функцию для финализации заказа
+  await finalizeOrder(ctx, ctx.bot);
 }
 
 // Отмена заказа

@@ -6,6 +6,12 @@ import { handleOrderTextMessage, handlePhoneContact } from './handlers/order/ord
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+// Добавляем экземпляр бота в контекст для использования в обработчиках
+bot.use((ctx, next) => {
+  ctx.bot = bot;
+  return next();
+});
+
 bot.start(handleStart);
 bot.on('callback_query', handleCallbackQuery);
 
