@@ -24,12 +24,15 @@ export function handleOrderStart(ctx) {
     reply_markup: {
       inline_keyboard: [
         [
-          { text: '🇺🇦 Українське туристичне', callback_data: 'order_ukraine' },
-          { text: '🇸🇰 Словацьке екстрене (AXA)', callback_data: 'order_axa' }
+          // { text: '🇺🇦 Українське туристичне', callback_data: 'order_ukraine' },
+          { text: '🇸🇰 Словацьке екстрене (AXA)', callback_data: 'order_axa' },
+          { text: '🇸🇰 Словацьке медичне (Union)', callback_data: 'order_union' },
         ],
         [
-          { text: '🇸🇰 Словацьке медичне (Union)', callback_data: 'order_union' },
           { text: '🌍 Міжнародне ризикове життя', callback_data: 'order_life' }
+        ],
+        [
+          { text: '🤔 Не знаю що замовити', callback_data: 'help_choose' }
         ],
         [
           { text: '← Повернутися до головного меню', callback_data: 'main_menu' }
@@ -54,7 +57,7 @@ export function handleInsuranceSelection(ctx, insuranceType) {
 
   ctx.reply(
     `Ви обрали: ${insuranceName}\n\n` +
-    'Будь ласка, введіть ваше повне ім\'я (Прізвище Ім\'я По батькові):',
+    'Будь ласка, введіть ваше повне прізвище та ім\'я латиницею (як у закордонному паспорті). Приклад: Prokopenko Ivan',
     {
       reply_markup: {
         inline_keyboard: [
@@ -122,14 +125,13 @@ export function validateContact(contact) {
     return { isValid: false, error: 'Контакт повинен містити щонайменше 5 символів' };
   }
 
-  // Проверяем на email или телефон
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Проверяем на телефон
   const phoneRegex = /^[+]?[0-9\s\-()]{10,}$/;
 
-  if (!emailRegex.test(trimmedContact) && !phoneRegex.test(trimmedContact)) {
+  if (!phoneRegex.test(trimmedContact)) {
     return {
       isValid: false,
-      error: 'Введіть дійсний email або номер телефону (мінімум 10 цифр)'
+      error: 'Введіть дійсний номер телефону (мінімум 10 цифр)'
     };
   }
 
