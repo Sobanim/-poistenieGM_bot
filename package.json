@@ -1,27 +1,29 @@
 {
-  "name": "poisteniegm_bot",
+  "name": "insurance-bot-slovakia",
   "version": "1.0.0",
-  "description": "Get more information about health insurance in Slovakia",
-  "main": "server.js",
+  "description": "Telegram bot for insurance consultation in Slovakia",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:watch": "eslint . --fix --watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Sobanim/-poistenieGM_bot.git"
-  },
-  "keywords": [],
+  "keywords": [
+    "telegram",
+    "bot",
+    "insurance",
+    "slovakia"
+  ],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Sobanim/-poistenieGM_bot/issues"
-  },
-  "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
+  "license": "MIT",
   "dependencies": {
-    "body-parser": "^2.2.0",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "telegraf": "^4.16.3"
+    "dotenv": "^16.0.0",
+    "telegraf": "^4.12.0"
   },
-  "type": "module"
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  }
 }
