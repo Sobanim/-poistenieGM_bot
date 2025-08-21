@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:watch": "eslint . --fix --watch"
@@ -22,11 +21,13 @@
   },
   "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "telegraf": "^4.12.0"
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "telegraf": "^4.16.3"
   },
   "type": "module",
   "devDependencies": {
-    "eslint": "^8.0.0"
+    "eslint": "^9.33.0"
   }
 }
