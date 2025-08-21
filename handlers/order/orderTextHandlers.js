@@ -19,7 +19,7 @@ export function handleOrderTextMessage(ctx) {
     return false; // Пользователь не в процессе заказа
   }
 
-  const messageText = ctx.message.text;
+  const messageText = ctx.message?.text;
 
   switch (userState.step) {
   case orderSteps.ENTERING_FULL_NAME:
