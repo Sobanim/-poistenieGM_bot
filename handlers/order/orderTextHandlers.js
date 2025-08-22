@@ -123,7 +123,7 @@ function handleAgeInput(ctx, ageInput, userId, userState) {
 
   ctx.reply(
     `✅ Вік збережено: ${validation.value} років\n\n` +
-    'Тепер введіть ваші контактні дані (email або номер телефону):',
+    'Тепер введіть ваш номер телефону:',
     {
       reply_markup: {
         inline_keyboard: [
@@ -148,7 +148,7 @@ function handleContactInput(ctx, contactInput, userId, userState) {
   if (!validation.isValid) {
     ctx.reply(
       `❌ ${validation.error}\n\n` +
-      'Будь ласка, введіть ваші контактні дані ще раз (email або номер телефону):',
+      'Будь ласка, введіть вашномер телефону ще раз:',
       {
         reply_markup: {
           inline_keyboard: [
@@ -296,7 +296,7 @@ export function handleEditCallbacks(ctx, action) {
   case 'edit_contact':
     updateUserState(userId, { step: orderSteps.ENTERING_CONTACT });
     ctx.reply(
-      'Введіть ваші контактні дані (email або номер телефону):',
+      'Введіть введіть ваш номер телефону:',
       {
         reply_markup: {
           inline_keyboard: [
