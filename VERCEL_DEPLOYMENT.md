@@ -6,8 +6,8 @@
 
 - `api/webhook.js` - основная функция для обработки webhook'ов от Telegram
 - `api/status.js` - функция для проверки статуса бота
+- `api/setup-webhook.js` - функция для установки webhook'а
 - `vercel.json` - конфигурация Vercel
-- `setup-webhook.js` - скрипт для установки webhook'а
 
 ## Настройка и деплой
 
@@ -26,38 +26,44 @@ vercel login
 vercel
 ```
 
-### 4. Настройка переменных окружения в Vercel
+### 4. Настройка переменных окружения в Vercel (опционально)
 
-В настройках проекта на Vercel добавьте переменные:
-
+В настройках проекта на Vercel можете добавить:
 - `BOT_TOKEN` - токен вашего Telegram бота
-- `WEBHOOK_URL` - URL вашего проекта на Vercel (например: https://your-project.vercel.app)
 
 ### 5. Установка webhook'а
 
-После деплоя выполните:
+После деплоя есть несколько способов установить webhook:
+
+**Способ 1: Через API функцию (рекомендуется)**
 ```bash
-npm run setup-webhook
+curl -X POST "https://your-project.vercel.app/api/setup-webhook" \
+     -H "Content-Type: application/json" \
+     -d '{"botToken": "YOUR_BOT_TOKEN"}'
 ```
 
-Или установите webhook вручную через API:
+**Способ 2: Если добавили BOT_TOKEN в переменные Vercel**
 ```bash
-curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
-     -H "Content-Type: application/json" \
-     -d '{"url": "https://your-project.vercel.app/api/webhook"}'
+curl -X POST "https://your-project.vercel.app/api/setup-webhook"
+```
+
+**Способ 3: Напрямую через Telegram API**
+```
+https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook?url=https://your-project.vercel.app/api/webhook
 ```
 
 ## Проверка работы
 
 - Статус бота: `https://your-project.vercel.app/api/status`
 - Webhook endpoint: `https://your-project.vercel.app/api/webhook`
+- Справка по установке webhook: `https://your-project.vercel.app/api/setup-webhook`
 
-## Основные отличия от Render
+## Основные преимущества Vercel
 
-1. **Serverless архитектура**: Каждый запрос обрабатывается отдельной функцией
-2. **Нет постоянного состояния**: Состояние между запросами не сохраняется
-3. **Автоматическое масштабирование**: Функции запускаются только при необходимости
-4. **Нет проблем с засыпанием**: В отличие от Render, функции не "засыпают"
+1. **Serverless архитектура**: Функции запускаются только при необходимости
+2. **Нет проблем с засыпанием**: В отличие от Render, функции не "засыпают"
+3. **Автоматическое масштабирование**: Обрабатывает любое количество пользователей
+4. **Быстрый деплой**: Автоматический деплой при пуше в Git
 
 ## Локальная разработка
 
@@ -72,6 +78,5 @@ npm run vercel-dev
 
 - Максимальное время выполнения функции: 10 секунд (Hobby план)
 - Максимальный размер запроса: 4.5MB
-- Максимальный размер ответа: 4.5MB
 
 Для большинства Telegram ботов этих ограничений достаточно.

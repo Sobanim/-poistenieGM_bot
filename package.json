@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "dev": "node index.js",
-    "setup-webhook": "node setup-webhook.js",
     "vercel-dev": "vercel dev"
   },
   "repository": {
@@ -21,7 +20,6 @@
   "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
   "dependencies": {
     "dotenv": "^17.2.1",
-    "node-fetch": "^3.3.2",
     "telegraf": "^4.16.3"
   },
   "type": "module"
