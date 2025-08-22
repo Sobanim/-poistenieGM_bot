@@ -6,6 +6,10 @@
   },
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/webhook",
       "destination": "/api/webhook"
     },
@@ -15,4 +19,3 @@
     }
   ]
 }
-
