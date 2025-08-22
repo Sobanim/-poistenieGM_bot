@@ -2,10 +2,11 @@
   "name": "poisteniegm_bot",
   "version": "1.0.0",
   "description": "Get more information about health insurance in Slovakia",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "setup-webhook": "node setup-webhook.js",
+    "vercel-dev": "vercel dev"
   },
   "repository": {
     "type": "git",
@@ -19,9 +20,8 @@
   },
   "homepage": "https://github.com/Sobanim/-poistenieGM_bot#readme",
   "dependencies": {
-    "body-parser": "^2.2.0",
     "dotenv": "^17.2.1",
-    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
     "telegraf": "^4.16.3"
   },
   "type": "module"
