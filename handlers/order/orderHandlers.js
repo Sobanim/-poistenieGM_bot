@@ -29,7 +29,7 @@ export function handleOrderStart(ctx) {
           { text: '🇸🇰 Словацьке медичне (Union)', callback_data: 'order_union' },
         ],
         [
-          { text: '🌍 Міжнародне ризикове життя', callback_data: 'order_life' }
+          { text: '🌍 Міжнародне страхування життя', callback_data: 'order_life' }
         ],
         [
           { text: '🤔 Не знаю що замовити', callback_data: 'help_choose' }
@@ -64,7 +64,8 @@ export function handleInsuranceSelection(ctx, insuranceType) {
 
   ctx.reply(
     `Ви обрали: ${insuranceName}\n\n` +
-    'Будь ласка, введіть ваше повне прізвище та ім\'я латиницею (як у закордонному паспорті). Приклад: Prokopenko Ivan',
+    'Будь ласка введіть ваше імʼя та прізвище \n' +
+    'Приклад: Ivan Prokopenko',
     {
       reply_markup: {
         inline_keyboard: [
