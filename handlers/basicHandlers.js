@@ -57,7 +57,7 @@ export function handleCallbackQuery(ctx) {
           ],
           [
             { text: '🇸🇰 Словацьке медичне (Union)', callback_data: 'insurance_union' },
-            { text: '🌍 Міжнародне ризикове життя', callback_data: 'insurance_life' }
+            { text: '🌍 Міжнародне страхування життя', callback_data: 'insurance_life' }
           ],
           [
             { text: '← Назад', callback_data: 'back' },
