@@ -13,7 +13,30 @@ bot.use((ctx, next) => {
 
 // Настраиваем обработчики
 bot.start(handleStart);
-bot.on('callback_query', handleCallbackQuery);
+
+// Исправленная обработка callback_query
+bot.on('callback_query', async (ctx) => {
+  try {
+    console.log(`[DEBUG] [WEBHOOK] Получен callback от пользователя ${ctx.from.id}: "${ctx.callbackQuery.data}"`);
+
+    // Сразу отвечаем на callback_query, чтобы убрать "загрузку" с кнопки
+    await ctx.answerCbQuery();
+
+    // Затем обрабатываем логику
+    await handleCallbackQuery(ctx);
+
+    console.log(`[DEBUG] [WEBHOOK] Callback обработан успешно для пользователя ${ctx.from.id}`);
+  } catch (error) {
+    console.error(`[ERROR] [WEBHOOK] Ошибка обработки callback от пользователя ${ctx.from.id}:`, error);
+
+    // Отвечаем на callback даже в случае ошибки
+    try {
+      await ctx.answerCbQuery('Произошла ошибка. Попробуйте еще раз.');
+    } catch (answerError) {
+      console.error('[ERROR] [WEBHOOK] Ошибка при ответе на callback:', answerError);
+    }
+  }
+});
 
 // Обработка текстовых сообщений для заказов
 bot.on('text', (ctx) => {
@@ -51,24 +74,42 @@ bot.on('contact', (ctx) => {
 
 export default async function handler(req, res) {
   try {
+    // Устанавливаем таймаут для обработки запроса
+    res.setTimeout(8000); // 8 секунд для Vercel
+
     if (req.method === 'GET') {
       return res.status(200).json({
         message: 'Webhook endpoint is working!',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        bot_status: 'active'
       });
     }
 
     if (req.method === 'POST') {
+      // Добавляем валидацию входящих данных
+      if (!req.body || !req.body.update_id) {
+        console.log('[WARNING] Получен некорректный webhook payload');
+        return res.status(400).json({ error: 'Invalid webhook payload' });
+      }
+
+      console.log(`[DEBUG] [WEBHOOK] Обрабатываем update ${req.body.update_id}`);
+
       // Обрабатываем обновление от Telegram
       await bot.handleUpdate(req.body);
-      return res.status(200).json({ ok: true });
+
+      console.log(`[DEBUG] [WEBHOOK] Update ${req.body.update_id} обработан успешно`);
+
+      return res.status(200).json({ ok: true, update_id: req.body.update_id });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (error) {
-    console.error('Error handling webhook:', error);
-    return res.status(500).json({
+    console.error('[ERROR] [WEBHOOK] Error handling webhook:', error);
+
+    // Возвращаем 200, чтобы Telegram не повторял запрос
+    return res.status(200).json({
+      ok: false,
       error: 'Internal server error',
       message: error.message
     });

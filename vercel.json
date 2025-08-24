@@ -2,6 +2,9 @@
   "functions": {
     "api/webhook.js": {
       "maxDuration": 10
+    },
+    "api/setup-webhook.js": {
+      "maxDuration": 15
     }
   },
   "rewrites": [
@@ -16,6 +19,17 @@
     {
       "source": "/status",
       "destination": "/api/status"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ]
 }

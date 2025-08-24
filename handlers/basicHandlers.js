@@ -39,9 +39,6 @@ export function handleStart(ctx) {
 export function handleCallbackQuery(ctx) {
   const data = ctx.callbackQuery.data;
 
-  // Обрабатываем callback'и
-  ctx.answerCbQuery();
-
   switch (data) {
   case 'main_menu':
     handleStart(ctx);
