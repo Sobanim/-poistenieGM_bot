@@ -148,7 +148,7 @@ function handleContactInput(ctx, contactInput, userId, userState) {
   if (!validation.isValid) {
     ctx.reply(
       `❌ ${validation.error}\n\n` +
-      'Будь ласка, введіть вашномер телефону ще раз:',
+      'Будь ласка, введіть ваш номер телефону ще раз:',
       {
         reply_markup: {
           inline_keyboard: [
@@ -209,7 +209,7 @@ function showOrderConfirmation(ctx, insuranceType, orderData) {
 }
 
 // Обработка контакта из Telegram
-export function handlePhoneContact(ctx) {
+export async function handlePhoneContact(ctx) {
   const userId = ctx.from.id;
   const userState = getUserState(userId);
 
@@ -220,14 +220,14 @@ export function handlePhoneContact(ctx) {
   const phoneNumber = ctx.message.contact.phone_number;
 
   // Сохраняем номер телефона
-  const finalData = { ...userState.data, contact: phoneNumber };
+  const finalData = {...userState.data, contact: phoneNumber};
   updateUserState(userId, {
     step: orderSteps.CONFIRMATION,
     data: finalData
   });
 
   ctx.reply('✅ Номер телефону збережено!');
-  showOrderConfirmation(ctx, userState.insuranceType, finalData);
+  await showOrderConfirmation(ctx, userState.insuranceType, finalData);
 
   return true;
 }
