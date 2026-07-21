@@ -12,7 +12,7 @@ import {
 
 export async function handleStart(ctx) {
   const userId = ctx.from.id;
-  // Очищаем состояние пользователя при старте
+  // Clear the user's state on start
   await clearUserState(userId);
 
   await ctx.reply(
@@ -140,7 +140,7 @@ export async function handleCallbackQuery(ctx) {
     );
     break;
 
-  // Обработка заказов страховки
+  // Handle insurance orders
   case 'order_ukraine':
   case 'order_axa':
   case 'order_union':
@@ -150,7 +150,7 @@ export async function handleCallbackQuery(ctx) {
     break;
   }
 
-  // Обработка редактирования данных заказа
+  // Handle order data edits
   case 'edit_fullname':
   case 'edit_age':
   case 'edit_contact':
@@ -182,7 +182,7 @@ export async function handleCallbackQuery(ctx) {
     );
     break;
 
-  // Информация о страховках
+  // Insurance information
   case 'insurance_ukraine':
     await ctx.reply(insuranceDetails.ukraine, {
       reply_markup: {
@@ -246,14 +246,14 @@ export async function handleCallbackQuery(ctx) {
       }
     };
 
-    // Пытаемся отправить фото; если не вышло — отправляем только текст.
+    // Try to send the photo; if that fails, send only the text.
     try {
       await ctx.replyWithPhoto(
         { source: './assets/images/metlife.jpg' },
         { caption: '📸 Приклад поліса MetLife' }
       );
     } catch (err) {
-      console.error('Помилка при відправці фото:', err);
+      console.error('Error sending photo:', err);
     }
 
     await ctx.reply(insuranceDetails.life, lifeKeyboard);

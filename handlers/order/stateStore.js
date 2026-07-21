@@ -1,14 +1,15 @@
-// Постоянное хранилище состояний пользователей.
+// Persistent storage for user state.
 //
-// В продакшене на Vercel (serverless) каждый апдейт от Telegram обрабатывается
-// отдельным вызовом функции, и обычный `Map` в памяти НЕ переживает между вызовами
-// (разные/холодные инстансы). Из-за этого пошаговый заказ и «поділитися номером»
-// ломались. Здесь используется Redis REST API (Vercel KV / Upstash), если он
-// настроен, иначе — fallback на память (удобно для локальной разработки).
+// In production on Vercel (serverless), each Telegram update is handled by a
+// separate function invocation, and a plain in-memory `Map` does NOT survive
+// between invocations (different/cold instances). This is what broke the
+// step-by-step order flow and "share phone number". This module uses the
+// Redis REST API (Vercel KV / Upstash) if configured, otherwise falls back
+// to an in-memory store (convenient for local development).
 //
-// Как включить в проде: задать переменные окружения
+// How to enable in production: set the environment variables
 //   KV_REST_API_URL + KV_REST_API_TOKEN            (Vercel KV)
-//   или UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (Upstash напрямую)
+//   or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (Upstash directly)
 
 const REST_URL =
   process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -17,17 +18,17 @@ const REST_TOKEN =
 
 const useRedis = Boolean(REST_URL && REST_TOKEN);
 
-// Время жизни незавершённой сессии заказа (сек). Старые сессии удаляются сами.
-const STATE_TTL_SECONDS = 60 * 60; // 1 час
+// Lifetime of an unfinished order session (sec). Old sessions expire on their own.
+const STATE_TTL_SECONDS = 60 * 60; // 1 hour
 
-// Fallback-хранилище для локального запуска (long-polling — один процесс).
+// Fallback store for local runs (long-polling — a single process).
 const memoryStore = new Map();
 
 if (!useRedis) {
   console.warn(
-    '[stateStore] Redis не настроен — используется хранилище в памяти. ' +
-    'В serverless-проде (Vercel) состояние будет теряться между запросами! ' +
-    'Задайте KV_REST_API_URL/KV_REST_API_TOKEN (или UPSTASH_REDIS_REST_*).'
+    '[stateStore] Redis is not configured — using the in-memory store. ' +
+    'In serverless production (Vercel) the state will be lost between requests! ' +
+    'Set KV_REST_API_URL/KV_REST_API_TOKEN (or UPSTASH_REDIS_REST_*).'
   );
 }
 
@@ -35,7 +36,7 @@ function key(userId) {
   return `order_state:${userId}`;
 }
 
-// Выполняет одну команду Redis через REST API (Upstash/Vercel KV).
+// Runs a single Redis command via the REST API (Upstash/Vercel KV).
 async function redisCommand(command) {
   const res = await fetch(REST_URL, {
     method: 'POST',
@@ -55,7 +56,7 @@ async function redisCommand(command) {
   return data.result;
 }
 
-// Получить состояние пользователя (или undefined).
+// Get the user's state (or undefined).
 export async function getUserState(userId) {
   if (!useRedis) {
     return memoryStore.get(userId);
@@ -73,7 +74,7 @@ export async function getUserState(userId) {
   }
 }
 
-// Полностью записать состояние пользователя.
+// Fully write the user's state.
 export async function setUserState(userId, state) {
   if (!useRedis) {
     memoryStore.set(userId, state);
@@ -90,7 +91,7 @@ export async function setUserState(userId, state) {
   return state;
 }
 
-// Частично обновить состояние (мержит с текущим).
+// Partially update the state (merges with the current one).
 export async function updateUserState(userId, updates) {
   const current = (await getUserState(userId)) || { step: null, data: {} };
   const next = { ...current, ...updates };
@@ -98,7 +99,7 @@ export async function updateUserState(userId, updates) {
   return next;
 }
 
-// Удалить состояние пользователя.
+// Delete the user's state.
 export async function clearUserState(userId) {
   if (!useRedis) {
     memoryStore.delete(userId);

@@ -2,10 +2,10 @@ import { Telegraf } from 'telegraf';
 import { setupBotHandlers } from '../config/botHandlers.js';
 import { botToken, adminId, isDevelopment } from '../config/env.js';
 
-// Создаем экземпляр бота
+// Create the bot instance
 const bot = new Telegraf(botToken);
 
-// Добавляем экземпляр бота в контекст для использования в обработчиках
+// Add the bot instance to the context for use in handlers
 bot.use((ctx, next) => {
   ctx.bot = bot;
   ctx.adminId = adminId;
@@ -13,13 +13,13 @@ bot.use((ctx, next) => {
   return next();
 });
 
-// Настраиваем обработчики через общую функцию
+// Set up handlers via the shared function
 setupBotHandlers(bot);
 
 export default async function handler(req, res) {
   try {
-    // Устанавливаем таймаут для обработки запроса
-    res.setTimeout(8000); // 8 секунд для Vercel
+    // Set a timeout for handling the request
+    res.setTimeout(8000); // 8 seconds for Vercel
 
     if (req.method === 'GET') {
       return res.status(200).json({
@@ -30,18 +30,18 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      // Добавляем валидацию входящих данных
+      // Validate the incoming payload
       if (!req.body || !req.body.update_id) {
-        console.log('[WARNING] Получен некорректный webhook payload');
+        console.log('[WARNING] Received an invalid webhook payload');
         return res.status(400).json({ error: 'Invalid webhook payload' });
       }
 
-      console.log(`[DEBUG] [WEBHOOK] Обрабатываем update ${req.body.update_id}`);
+      console.log(`[DEBUG] [WEBHOOK] Processing update ${req.body.update_id}`);
 
-      // Обрабатываем обновление от Telegram
+      // Process the update from Telegram
       await bot.handleUpdate(req.body);
 
-      console.log(`[DEBUG] [WEBHOOK] Update ${req.body.update_id} обработан успешно`);
+      console.log(`[DEBUG] [WEBHOOK] Update ${req.body.update_id} processed successfully`);
 
       return res.status(200).json({ ok: true, update_id: req.body.update_id });
     }
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('[ERROR] [WEBHOOK] Error handling webhook:', error);
 
-    // Возвращаем 200, чтобы Telegram не повторял запрос
+    // Return 200 so Telegram doesn't retry the request
     return res.status(200).json({
       ok: false,
       error: 'Internal server error',

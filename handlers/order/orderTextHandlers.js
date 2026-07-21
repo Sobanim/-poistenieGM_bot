@@ -10,14 +10,14 @@ import {
   clearUserState
 } from './orderHandlers.js';
 
-// Экранирование спецсимволов легаси-Markdown (parse_mode: 'Markdown'),
-// чтобы данные пользователя (например имя с символами *, _, [, `)
-// не ломали форматирование сообщения.
+// Escape special characters for legacy Markdown (parse_mode: 'Markdown'),
+// so that user data (e.g. a name containing *, _, [, `)
+// doesn't break the message formatting.
 function escapeMarkdown(text) {
   return String(text).replace(/([_*[`])/g, '\\$1');
 }
 
-// Обработка текстовых сообщений в процессе заказа
+// Handle text messages within the order flow
 export async function handleOrderTextMessage(ctx) {
   const userId = ctx.from.id;
   const userState = await getUserState(userId);
@@ -25,15 +25,15 @@ export async function handleOrderTextMessage(ctx) {
   console.log(`[DEBUG] handleOrderTextMessage - userId: ${userId}`);
 
   if (!userState || !userState.step) {
-    console.log(`[DEBUG] Пользователь ${userId} не в процессе заказа или нет шага`);
-    return false; // Пользователь не в процессе заказа
+    console.log(`[DEBUG] User ${userId} is not in the order flow or has no step`);
+    return false; // The user is not in the order flow
   }
 
   const messageText = ctx.message?.text;
-  console.log(`[DEBUG] Получено сообщение от ${userId}, текущий шаг: ${userState.step}`);
+  console.log(`[DEBUG] Received message from ${userId}, current step: ${userState.step}`);
 
   if (!messageText) {
-    console.log(`[DEBUG] Нет текста в сообщении от пользователя ${userId}`);
+    console.log(`[DEBUG] No text in the message from user ${userId}`);
     return false;
   }
 
@@ -51,14 +51,14 @@ export async function handleOrderTextMessage(ctx) {
     break;
 
   default:
-    console.log(`[DEBUG] Неизвестный шаг: ${userState.step} для пользователя ${userId}`);
+    console.log(`[DEBUG] Unknown step: ${userState.step} for user ${userId}`);
     return false;
   }
 
-  return true; // Сообщение обработано
+  return true; // The message was handled
 }
 
-// Обработка ввода полного имени
+// Handle full name input
 async function handleFullNameInput(ctx, fullName, userId, userState) {
   const validation = validateFullName(fullName);
 
@@ -78,7 +78,7 @@ async function handleFullNameInput(ctx, fullName, userId, userState) {
     return;
   }
 
-  // Сохраняем имя и переходим к следующему шагу
+  // Save the name and move to the next step
   await updateUserState(userId, {
     step: orderSteps.ENTERING_AGE,
     data: { ...userState.data, fullName: validation.value }
@@ -98,7 +98,7 @@ async function handleFullNameInput(ctx, fullName, userId, userState) {
   );
 }
 
-// Обработка ввода возраста
+// Handle age input
 async function handleAgeInput(ctx, ageInput, userId, userState) {
   const validation = validateAge(ageInput);
 
@@ -118,7 +118,7 @@ async function handleAgeInput(ctx, ageInput, userId, userState) {
     return;
   }
 
-  // Сохраняем возраст и переходим к контактам
+  // Save the age and move to contact input
   await updateUserState(userId, {
     step: orderSteps.ENTERING_CONTACT,
     data: { ...userState.data, age: validation.value }
@@ -139,7 +139,7 @@ async function handleAgeInput(ctx, ageInput, userId, userState) {
   );
 }
 
-// Обработка ввода контакта
+// Handle contact input
 async function handleContactInput(ctx, contactInput, userId, userState) {
   const validation = validateContact(contactInput);
 
@@ -160,7 +160,7 @@ async function handleContactInput(ctx, contactInput, userId, userState) {
     return;
   }
 
-  // Сохраняем контакт и переходим к подтверждению
+  // Save the contact and move to confirmation
   const finalData = { ...userState.data, contact: validation.value };
   await updateUserState(userId, {
     step: orderSteps.CONFIRMATION,
@@ -170,7 +170,7 @@ async function handleContactInput(ctx, contactInput, userId, userState) {
   await showOrderConfirmation(ctx, userState.insuranceType, finalData);
 }
 
-// Показать подтверждение заказа
+// Show the order confirmation
 async function showOrderConfirmation(ctx, insuranceType, orderData) {
   const insuranceName = insuranceTypes[insuranceType];
 
@@ -201,13 +201,13 @@ async function showOrderConfirmation(ctx, insuranceType, orderData) {
   });
 }
 
-// Обработка контакта из Telegram (кнопка «Поділитися номером телефону»)
+// Handle a contact shared via Telegram (the "Share phone number" button)
 export async function handlePhoneContact(ctx) {
   const userId = ctx.from.id;
   const userState = await getUserState(userId);
 
   if (!userState || userState.step !== orderSteps.ENTERING_CONTACT) {
-    // Сессия потеряна/устарела — даём обратную связь вместо тишины.
+    // Session lost/expired — give feedback instead of staying silent.
     await ctx.reply(
       'Сесія замовлення застаріла або не активна. Почніть заново — /start.',
       { reply_markup: { remove_keyboard: true } }
@@ -217,14 +217,14 @@ export async function handlePhoneContact(ctx) {
 
   const phoneNumber = ctx.message.contact.phone_number;
 
-  // Сохраняем номер телефона
+  // Save the phone number
   const finalData = { ...userState.data, contact: phoneNumber };
   await updateUserState(userId, {
     step: orderSteps.CONFIRMATION,
     data: finalData
   });
 
-  // Убираем reply-клавиатуру и подтверждаем получение
+  // Remove the reply keyboard and confirm receipt
   await ctx.reply('✅ Номер телефону збережено!', {
     reply_markup: { remove_keyboard: true }
   });
@@ -233,7 +233,7 @@ export async function handlePhoneContact(ctx) {
   return true;
 }
 
-// Обработка кнопок редактирования
+// Handle edit button callbacks
 export async function handleEditCallbacks(ctx, action) {
   const userId = ctx.from.id;
   const userState = await getUserState(userId);
@@ -316,13 +316,13 @@ export async function handleEditCallbacks(ctx, action) {
   }
 }
 
-// Подтверждение заказа
+// Confirm the order
 export async function handleOrderConfirmation(ctx) {
-  // Используем новую функцию для финализации заказа
+  // Use the shared function to finalize the order
   await finalizeOrder(ctx, ctx.bot);
 }
 
-// Отмена заказа
+// Cancel the order
 export async function handleOrderCancellation(ctx) {
   const userId = ctx.from.id;
   await clearUserState(userId);

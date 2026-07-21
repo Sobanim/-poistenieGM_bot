@@ -51,7 +51,7 @@ export function setupBotHandlers(bot) {
         );
       }
     } catch (error) {
-      console.error(`[ERROR] Ошибка обработки текста от пользователя ${ctx.from.id}:`, error);
+      console.error(`[ERROR] Error handling text from user ${ctx.from.id}:`, error);
     }
   });
 

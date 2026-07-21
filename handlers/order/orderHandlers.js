@@ -1,18 +1,18 @@
-// Состояние пользователей хранится в постоянном хранилище (см. stateStore.js).
-// Реэкспортируем функции, чтобы остальные модули импортировали их отсюда как раньше.
+// User state is kept in persistent storage (see stateStore.js).
+// Re-export the functions so other modules can keep importing them from here as before.
 import {
   getUserState,
   setUserState,
   updateUserState,
   clearUserState
 } from './stateStore.js';
-// adminId берётся из общего модуля окружения, чтобы работал dev-режим
-// (DEV_ADMIN_ID при NODE_ENV=development). См. config/env.js.
+// adminId comes from the shared environment module so dev mode works
+// (DEV_ADMIN_ID when NODE_ENV=development). See config/env.js.
 import { adminId } from '../../config/env.js';
 
 export { getUserState, updateUserState, clearUserState };
 
-// Типы страховок для заказа
+// Insurance types available for ordering
 export const insuranceTypes = {
   ukraine: '🇺🇦 Українське туристичне',
   axa: '🇸🇰 Словацьке екстрене (AXA)',
@@ -20,7 +20,7 @@ export const insuranceTypes = {
   life: '🌍 Міжнародне страхування життя'
 };
 
-// Шаги процесса заказа
+// Order process steps
 export const orderSteps = {
   SELECTING_INSURANCE: 'selecting_insurance',
   ENTERING_FULL_NAME: 'entering_full_name',
@@ -29,7 +29,7 @@ export const orderSteps = {
   CONFIRMATION: 'confirmation'
 };
 
-// Инициация процесса заказа
+// Start the order process
 export async function handleOrderStart(ctx) {
   await ctx.reply('Оберіть тип страхування для замовлення:', {
     reply_markup: {
@@ -53,13 +53,13 @@ export async function handleOrderStart(ctx) {
   });
 }
 
-// Обработка выбора типа страховки
+// Handle the insurance type selection
 export async function handleInsuranceSelection(ctx, insuranceType) {
   const userId = ctx.from.id;
 
   console.log(`[DEBUG] handleInsuranceSelection - userId: ${userId}, insuranceType: ${insuranceType}`);
 
-  // Инициализируем состояние пользователя
+  // Initialize the user's state
   const newState = {
     step: orderSteps.ENTERING_FULL_NAME,
     insuranceType: insuranceType,
@@ -68,7 +68,7 @@ export async function handleInsuranceSelection(ctx, insuranceType) {
 
   await setUserState(userId, newState);
 
-  console.log(`[DEBUG] Состояние пользователя ${userId} установлено:`, JSON.stringify(newState, null, 2));
+  console.log(`[DEBUG] State set for user ${userId}:`, JSON.stringify(newState, null, 2));
 
   const insuranceName = insuranceTypes[insuranceType];
 
@@ -87,7 +87,7 @@ export async function handleInsuranceSelection(ctx, insuranceType) {
   );
 }
 
-// Валидация полного имени
+// Validate the full name
 export function validateFullName(name) {
   if (!name || typeof name !== 'string') {
     return { isValid: false, error: 'Ім\'я не може бути порожнім' };
@@ -103,7 +103,7 @@ export function validateFullName(name) {
     return { isValid: false, error: 'Ім\'я не може містити більше 100 символів' };
   }
 
-  // Проверяем что есть минимум 2 слова (имя и фамилия)
+  // Check that there are at least 2 words (first and last name)
   const words = trimmedName.split(/\s+/);
   if (words.length < 2) {
     return { isValid: false, error: 'Введіть прізвище та ім\'я (мінімум 2 слова)' };
@@ -112,7 +112,7 @@ export function validateFullName(name) {
   return { isValid: true, value: trimmedName };
 }
 
-// Валидация возраста
+// Validate the age
 export function validateAge(ageInput) {
   if (!ageInput || typeof ageInput !== 'string') {
     return { isValid: false, error: 'Вік не може бути порожнім' };
@@ -131,7 +131,7 @@ export function validateAge(ageInput) {
   return { isValid: true, value: age };
 }
 
-// Валидация контакта
+// Validate the contact
 export function validateContact(contact) {
   if (!contact || typeof contact !== 'string') {
     return { isValid: false, error: 'Контакт не може бути порожнім' };
@@ -143,7 +143,7 @@ export function validateContact(contact) {
     return { isValid: false, error: 'Контакт повинен містити щонайменше 5 символів' };
   }
 
-  // Проверяем на телефон
+  // Check that it looks like a phone number
   const phoneRegex = /^[+]?[0-9\s\-()]{10,}$/;
 
   if (!phoneRegex.test(trimmedContact)) {
@@ -156,16 +156,16 @@ export function validateContact(contact) {
   return { isValid: true, value: trimmedContact };
 }
 
-// Функция для отправки уведомления администратору.
-// Возвращает true, если уведомление успешно доставлено, иначе false —
-// чтобы вызывающий код мог не потерять заявку молча.
+// Send a notification to the admin.
+// Returns true if the notification was delivered successfully, false otherwise —
+// so the caller doesn't silently lose the submission.
 export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType, userId, userName) {
   if (!adminId || adminId === 'YOUR_ADMIN_ID_HERE') {
-    console.error('⚠️ ADMIN_ID не настроен — заявку некому отправить!');
+    console.error('⚠️ ADMIN_ID is not configured — there is no one to send the submission to!');
     return false;
   }
 
-  // Форматируем дату и время
+  // Format the date and time
   const now = new Date();
   const dateFormatted = now.toLocaleDateString('uk-UA', {
     day: '2-digit',
@@ -180,7 +180,7 @@ export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType
 
   const insuranceName = insuranceTypes[insuranceType];
 
-  // Формируем сообщение для администратора без проблемных Markdown символов
+  // Build the admin message without problematic Markdown characters
   const adminMessage = `🔔 НОВА ЗАЯВКА НА СТРАХУВАННЯ
 
 📋 Інформація про заявку:
@@ -202,15 +202,15 @@ export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType
 
   try {
     await bot.telegram.sendMessage(adminId, adminMessage);
-    console.log(`✅ Уведомление администратору отправлено для заявки пользователя ${userId}`);
+    console.log(`✅ Admin notification sent for order from user ${userId}`);
     return true;
   } catch (error) {
-    console.error('❌ Ошибка отправки уведомления администратору:', error);
+    console.error('❌ Error sending admin notification:', error);
     return false;
   }
 }
 
-// Функция для финализации заказа
+// Finalize the order
 export async function finalizeOrder(ctx, bot) {
   const userId = ctx.from.id;
   const userName = ctx.from.username;
@@ -221,7 +221,7 @@ export async function finalizeOrder(ctx, bot) {
     return;
   }
 
-  // Отправляем уведомление администратору
+  // Notify the admin
   const notified = await sendOrderNotificationToAdmin(
     bot,
     userState.data,
@@ -230,11 +230,11 @@ export async function finalizeOrder(ctx, bot) {
     userName
   );
 
-  // Если заявку не удалось доставить — НЕ теряем её молча:
-  // логируем полные данные и даём пользователю повторить, не очищая состояние.
+  // If the submission couldn't be delivered — don't lose it silently:
+  // log the full data and let the user retry, without clearing the state.
   if (!notified) {
     console.error(
-      '❌ ЗАЯВКА НЕ ДОСТАВЛЕНА адміну. Дані для ручного відновлення:',
+      '❌ SUBMISSION NOT DELIVERED to the admin. Data for manual recovery:',
       JSON.stringify({
         userId,
         userName,
@@ -257,10 +257,10 @@ export async function finalizeOrder(ctx, bot) {
     return;
   }
 
-  // Очищаем состояние пользователя
+  // Clear the user's state
   await clearUserState(userId);
 
-  // Уведомляем пользователя об успешной отправке
+  // Notify the user that the order was submitted successfully
   const successMessage = `
 ✅ **Ваша заявка успішно відправлена!**
 
