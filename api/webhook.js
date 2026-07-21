@@ -11,6 +11,12 @@ bot.use((ctx, next) => {
   return next();
 });
 
+// Глобальный обработчик ошибок, чтобы необработанные исключения в хендлерах
+// не роняли обработку апдейта молча.
+bot.catch((err, ctx) => {
+  console.error(`[ERROR] [WEBHOOK] Необроблена помилка для update ${ctx?.update?.update_id}:`, err);
+});
+
 // Настраиваем обработчики
 bot.start(handleStart);
 
@@ -39,15 +45,14 @@ bot.on('callback_query', async (ctx) => {
 });
 
 // Обработка текстовых сообщений для заказов
-bot.on('text', (ctx) => {
-  console.log(`[DEBUG] [WEBHOOK] Получено текстовое сообщение от пользователя ${ctx.from.id}: "${ctx.message.text}"`);
+bot.on('text', async (ctx) => {
+  console.log(`[DEBUG] [WEBHOOK] Получено текстовое сообщение от пользователя ${ctx.from.id}`);
 
-  const handled = handleOrderTextMessage(ctx);
+  const handled = await handleOrderTextMessage(ctx);
   console.log(`[DEBUG] [WEBHOOK] Сообщение обработано в процессе заказа: ${handled}`);
 
   if (!handled) {
-    console.log(`[DEBUG] [WEBHOOK] Отправляем стандартный ответ пользователю ${ctx.from.id}`);
-    ctx.reply(
+    await ctx.reply(
       'Використовуйте кнопки меню для навігації або введіть /start для початку.',
       {
         reply_markup: {
@@ -61,15 +66,9 @@ bot.on('text', (ctx) => {
 });
 
 // Обработка контактов
-bot.on('contact', (ctx) => {
+bot.on('contact', async (ctx) => {
   console.log(`[DEBUG] [WEBHOOK] Получен контакт от пользователя ${ctx.from.id}`);
-  const handled = handlePhoneContact(ctx);
-
-  if (handled) {
-    ctx.reply('Дякую! Контакт отримано.', {
-      reply_markup: { remove_keyboard: true }
-    });
-  }
+  await handlePhoneContact(ctx);
 });
 
 export default async function handler(req, res) {

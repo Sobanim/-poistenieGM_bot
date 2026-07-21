@@ -10,13 +10,19 @@ import {
   clearUserState
 } from './orderHandlers.js';
 
+// Экранирование спецсимволов легаси-Markdown (parse_mode: 'Markdown'),
+// чтобы данные пользователя (например имя с символами *, _, [, `)
+// не ломали форматирование сообщения.
+function escapeMarkdown(text) {
+  return String(text).replace(/([_*[`])/g, '\\$1');
+}
+
 // Обработка текстовых сообщений в процессе заказа
-export function handleOrderTextMessage(ctx) {
+export async function handleOrderTextMessage(ctx) {
   const userId = ctx.from.id;
-  const userState = getUserState(userId);
+  const userState = await getUserState(userId);
 
   console.log(`[DEBUG] handleOrderTextMessage - userId: ${userId}`);
-  console.log(`[DEBUG] userState:`, JSON.stringify(userState, null, 2));
 
   if (!userState || !userState.step) {
     console.log(`[DEBUG] Пользователь ${userId} не в процессе заказа или нет шага`);
@@ -24,7 +30,7 @@ export function handleOrderTextMessage(ctx) {
   }
 
   const messageText = ctx.message?.text;
-  console.log(`[DEBUG] Получено сообщение от ${userId}: "${messageText}", текущий шаг: ${userState.step}`);
+  console.log(`[DEBUG] Получено сообщение от ${userId}, текущий шаг: ${userState.step}`);
 
   if (!messageText) {
     console.log(`[DEBUG] Нет текста в сообщении от пользователя ${userId}`);
@@ -33,18 +39,15 @@ export function handleOrderTextMessage(ctx) {
 
   switch (userState.step) {
   case orderSteps.ENTERING_FULL_NAME:
-    console.log(`[DEBUG] Обрабатываем ввод имени для пользователя ${userId}`);
-    handleFullNameInput(ctx, messageText, userId, userState);
+    await handleFullNameInput(ctx, messageText, userId, userState);
     break;
 
   case orderSteps.ENTERING_AGE:
-    console.log(`[DEBUG] Обрабатываем ввод возраста для пользователя ${userId}`);
-    handleAgeInput(ctx, messageText, userId, userState);
+    await handleAgeInput(ctx, messageText, userId, userState);
     break;
 
   case orderSteps.ENTERING_CONTACT:
-    console.log(`[DEBUG] Обрабатываем ввод контакта для пользователя ${userId}`);
-    handleContactInput(ctx, messageText, userId, userState);
+    await handleContactInput(ctx, messageText, userId, userState);
     break;
 
   default:
@@ -56,11 +59,11 @@ export function handleOrderTextMessage(ctx) {
 }
 
 // Обработка ввода полного имени
-function handleFullNameInput(ctx, fullName, userId, userState) {
+async function handleFullNameInput(ctx, fullName, userId, userState) {
   const validation = validateFullName(fullName);
 
   if (!validation.isValid) {
-    ctx.reply(
+    await ctx.reply(
       `❌ ${validation.error}\n\n` +
       'Будь ласка, введіть ваше повне ім\'я ще раз (Прізвище Ім\'я):',
       {
@@ -76,12 +79,12 @@ function handleFullNameInput(ctx, fullName, userId, userState) {
   }
 
   // Сохраняем имя и переходим к следующему шагу
-  updateUserState(userId, {
+  await updateUserState(userId, {
     step: orderSteps.ENTERING_AGE,
     data: { ...userState.data, fullName: validation.value }
   });
 
-  ctx.reply(
+  await ctx.reply(
     `✅ Ім'я збережено: ${validation.value}\n\n` +
     'Тепер введіть ваш вік (повних років):',
     {
@@ -96,11 +99,11 @@ function handleFullNameInput(ctx, fullName, userId, userState) {
 }
 
 // Обработка ввода возраста
-function handleAgeInput(ctx, ageInput, userId, userState) {
+async function handleAgeInput(ctx, ageInput, userId, userState) {
   const validation = validateAge(ageInput);
 
   if (!validation.isValid) {
-    ctx.reply(
+    await ctx.reply(
       `❌ ${validation.error}\n\n` +
       'Будь ласка, введіть ваш вік ще раз (тільки число):',
       {
@@ -116,51 +119,41 @@ function handleAgeInput(ctx, ageInput, userId, userState) {
   }
 
   // Сохраняем возраст и переходим к контактам
-  updateUserState(userId, {
+  await updateUserState(userId, {
     step: orderSteps.ENTERING_CONTACT,
     data: { ...userState.data, age: validation.value }
   });
 
-  ctx.reply(
+  await ctx.reply(
     `✅ Вік збережено: ${validation.value} років\n\n` +
-    'Тепер введіть ваш номер телефону:',
+    'Тепер поділіться номером телефону кнопкою нижче або введіть його вручну:',
     {
       reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: '📱 Поділитися номером телефону',
-              callback_data: 'share_phone'
-            }
-          ],
-          [{ text: '← Змінити вік', callback_data: 'edit_age' }],
-          [{ text: '← Головне меню', callback_data: 'main_menu' }]
-        ]
+        keyboard: [
+          [{ text: '📱 Поділитися номером телефону', request_contact: true }]
+        ],
+        one_time_keyboard: true,
+        resize_keyboard: true
       }
     }
   );
 }
 
 // Обработка ввода контакта
-function handleContactInput(ctx, contactInput, userId, userState) {
+async function handleContactInput(ctx, contactInput, userId, userState) {
   const validation = validateContact(contactInput);
 
   if (!validation.isValid) {
-    ctx.reply(
+    await ctx.reply(
       `❌ ${validation.error}\n\n` +
-      'Будь ласка, введіть вашномер телефону ще раз:',
+      'Будь ласка, введіть ваш номер телефону ще раз:',
       {
         reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '📱 Поділитися номером телефону',
-                callback_data: 'share_phone'
-              }
-            ],
-            [{ text: '← Змінити вік', callback_data: 'edit_age' }],
-            [{ text: '← Головне меню', callback_data: 'main_menu' }]
-          ]
+          keyboard: [
+            [{ text: '📱 Поділитися номером телефону', request_contact: true }]
+          ],
+          one_time_keyboard: true,
+          resize_keyboard: true
         }
       }
     );
@@ -169,27 +162,27 @@ function handleContactInput(ctx, contactInput, userId, userState) {
 
   // Сохраняем контакт и переходим к подтверждению
   const finalData = { ...userState.data, contact: validation.value };
-  updateUserState(userId, {
+  await updateUserState(userId, {
     step: orderSteps.CONFIRMATION,
     data: finalData
   });
 
-  showOrderConfirmation(ctx, userState.insuranceType, finalData);
+  await showOrderConfirmation(ctx, userState.insuranceType, finalData);
 }
 
 // Показать подтверждение заказа
-function showOrderConfirmation(ctx, insuranceType, orderData) {
+async function showOrderConfirmation(ctx, insuranceType, orderData) {
   const insuranceName = insuranceTypes[insuranceType];
 
   const confirmationText =
     '📋 **Підтвердження замовлення**\n\n' +
-    `**Тип страхування:** ${insuranceName}\n` +
-    `**Повне ім'я:** ${orderData.fullName}\n` +
-    `**Вік:** ${orderData.age} років\n` +
-    `**Контакт:** ${orderData.contact}\n\n` +
+    `**Тип страхування:** ${escapeMarkdown(insuranceName)}\n` +
+    `**Повне ім'я:** ${escapeMarkdown(orderData.fullName)}\n` +
+    `**Вік:** ${escapeMarkdown(orderData.age)} років\n` +
+    `**Контакт:** ${escapeMarkdown(orderData.contact)}\n\n` +
     'Перевірте дані та підтвердіть замовлення:';
 
-  ctx.reply(confirmationText, {
+  await ctx.reply(confirmationText, {
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
@@ -208,12 +201,17 @@ function showOrderConfirmation(ctx, insuranceType, orderData) {
   });
 }
 
-// Обработка контакта из Telegram
-export function handlePhoneContact(ctx) {
+// Обработка контакта из Telegram (кнопка «Поділитися номером телефону»)
+export async function handlePhoneContact(ctx) {
   const userId = ctx.from.id;
-  const userState = getUserState(userId);
+  const userState = await getUserState(userId);
 
   if (!userState || userState.step !== orderSteps.ENTERING_CONTACT) {
+    // Сессия потеряна/устарела — даём обратную связь вместо тишины.
+    await ctx.reply(
+      'Сесія замовлення застаріла або не активна. Почніть заново — /start.',
+      { reply_markup: { remove_keyboard: true } }
+    );
     return false;
   }
 
@@ -221,32 +219,35 @@ export function handlePhoneContact(ctx) {
 
   // Сохраняем номер телефона
   const finalData = { ...userState.data, contact: phoneNumber };
-  updateUserState(userId, {
+  await updateUserState(userId, {
     step: orderSteps.CONFIRMATION,
     data: finalData
   });
 
-  ctx.reply('✅ Номер телефону збережено!');
-  showOrderConfirmation(ctx, userState.insuranceType, finalData);
+  // Убираем reply-клавиатуру и подтверждаем получение
+  await ctx.reply('✅ Номер телефону збережено!', {
+    reply_markup: { remove_keyboard: true }
+  });
+  await showOrderConfirmation(ctx, userState.insuranceType, finalData);
 
   return true;
 }
 
 // Обработка кнопок редактирования
-export function handleEditCallbacks(ctx, action) {
+export async function handleEditCallbacks(ctx, action) {
   const userId = ctx.from.id;
-  const userState = getUserState(userId);
+  const userState = await getUserState(userId);
 
   if (!userState) {
-    ctx.reply('Помилка: дані замовлення не знайдено. Почніть заново.');
+    await ctx.reply('Помилка: дані замовлення не знайдено. Почніть заново — /start.');
     return;
   }
 
   switch (action) {
   case 'edit_fullname':
-    updateUserState(userId, { step: orderSteps.ENTERING_FULL_NAME });
-    ctx.reply(
-      'Введіть ваше повне ім\'я (Прізвище Ім\'я По батькові):',
+    await updateUserState(userId, { step: orderSteps.ENTERING_FULL_NAME });
+    await ctx.reply(
+      'Введіть ваше повне ім\'я (Прізвище Ім\'я):',
       {
         reply_markup: {
           inline_keyboard: [
@@ -258,8 +259,8 @@ export function handleEditCallbacks(ctx, action) {
     break;
 
   case 'edit_age':
-    updateUserState(userId, { step: orderSteps.ENTERING_AGE });
-    ctx.reply(
+    await updateUserState(userId, { step: orderSteps.ENTERING_AGE });
+    await ctx.reply(
       'Введіть ваш вік (повних років):',
       {
         reply_markup: {
@@ -272,7 +273,7 @@ export function handleEditCallbacks(ctx, action) {
     break;
 
   case 'edit_order_data':
-    ctx.reply(
+    await ctx.reply(
       'Що ви хочете змінити?',
       {
         reply_markup: {
@@ -294,27 +295,23 @@ export function handleEditCallbacks(ctx, action) {
     break;
 
   case 'edit_contact':
-    updateUserState(userId, { step: orderSteps.ENTERING_CONTACT });
-    ctx.reply(
-      'Введіть введіть ваш номер телефону:',
+    await updateUserState(userId, { step: orderSteps.ENTERING_CONTACT });
+    await ctx.reply(
+      'Поділіться номером телефону кнопкою нижче або введіть його вручну:',
       {
         reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '📱 Поділитися номером телефону',
-                callback_data: 'share_phone'
-              }
-            ],
-            [{ text: '← Головне меню', callback_data: 'main_menu' }]
-          ]
+          keyboard: [
+            [{ text: '📱 Поділитися номером телефону', request_contact: true }]
+          ],
+          one_time_keyboard: true,
+          resize_keyboard: true
         }
       }
     );
     break;
 
   case 'back_to_confirmation':
-    showOrderConfirmation(ctx, userState.insuranceType, userState.data);
+    await showOrderConfirmation(ctx, userState.insuranceType, userState.data);
     break;
   }
 }
@@ -326,11 +323,11 @@ export async function handleOrderConfirmation(ctx) {
 }
 
 // Отмена заказа
-export function handleOrderCancellation(ctx) {
+export async function handleOrderCancellation(ctx) {
   const userId = ctx.from.id;
-  clearUserState(userId);
+  await clearUserState(userId);
 
-  ctx.reply(
+  await ctx.reply(
     '❌ Замовлення скасовано.\n\n' +
     'Ви можете почати заново в будь-який час.',
     {

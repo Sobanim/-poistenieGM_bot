@@ -12,22 +12,26 @@ bot.use((ctx, next) => {
   return next();
 });
 
+// Глобальный обработчик ошибок
+bot.catch((err, ctx) => {
+  console.error(`[ERROR] Необроблена помилка для update ${ctx?.update?.update_id}:`, err);
+});
+
 bot.start(handleStart);
 bot.on('callback_query', handleCallbackQuery);
 
 // Обработка текстовых сообщений (для процесса заказа)
-bot.on('text', (ctx) => {
-  console.log(`[DEBUG] Получено текстовое сообщение от пользователя ${ctx.from.id}: "${ctx.message.text}"`);
+bot.on('text', async (ctx) => {
+  console.log(`[DEBUG] Получено текстовое сообщение от пользователя ${ctx.from.id}`);
 
   // Проверяем, находится ли пользователь в процессе заказа
-  const handled = handleOrderTextMessage(ctx);
+  const handled = await handleOrderTextMessage(ctx);
 
   console.log(`[DEBUG] Сообщение обработано в процессе заказа: ${handled}`);
 
   if (!handled) {
-    console.log(`[DEBUG] Отправляем стандартный ответ пользователю ${ctx.from.id}`);
     // Если сообщение не обработано в процессе заказа, показываем главное меню
-    ctx.reply(
+    await ctx.reply(
       'Використовуйте кнопки меню для навігації або введіть /start для початку.',
       {
         reply_markup: {
@@ -41,15 +45,8 @@ bot.on('text', (ctx) => {
 });
 
 // Обработка контактов (когда пользователь делится номером телефона)
-bot.on('contact', (ctx) => {
-  const handled = handlePhoneContact(ctx);
-
-  if (handled) {
-    // Скрываем клавиатуру после получения контакта
-    ctx.reply('Дякую! Контакт отримано.', {
-      reply_markup: { remove_keyboard: true }
-    });
-  }
+bot.on('contact', async (ctx) => {
+  await handlePhoneContact(ctx);
 });
 
 bot.launch().then(() => {
@@ -60,3 +57,7 @@ bot.launch().then(() => {
 }).catch((err) => {
   console.error('Ошибка запуска бота:', err);
 });
+
+// Корректная остановка при завершении процесса
+process.once('SIGINT', () => bot.stop('SIGINT'));
+process.once('SIGTERM', () => bot.stop('SIGTERM'));
