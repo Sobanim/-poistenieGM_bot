@@ -1,7 +1,16 @@
-// Хранилище состояний пользователей (в продакшне лучше использовать базу данных)
-import { adminId } from "../../config/env.js";
+// Состояние пользователей хранится в постоянном хранилище (см. stateStore.js).
+// Реэкспортируем функции, чтобы остальные модули импортировали их отсюда как раньше.
+import {
+  getUserState,
+  setUserState,
+  updateUserState,
+  clearUserState
+} from './stateStore.js';
+// adminId берётся из общего модуля окружения, чтобы работал dev-режим
+// (DEV_ADMIN_ID при NODE_ENV=development). См. config/env.js.
+import { adminId } from '../../config/env.js';
 
-const userStates = new Map();
+export { getUserState, updateUserState, clearUserState };
 
 // Типы страховок для заказа
 export const insuranceTypes = {
@@ -21,8 +30,8 @@ export const orderSteps = {
 };
 
 // Инициация процесса заказа
-export function handleOrderStart(ctx) {
-  ctx.reply('Оберіть тип страхування для замовлення:', {
+export async function handleOrderStart(ctx) {
+  await ctx.reply('Оберіть тип страхування для замовлення:', {
     reply_markup: {
       inline_keyboard: [
         [
@@ -45,7 +54,7 @@ export function handleOrderStart(ctx) {
 }
 
 // Обработка выбора типа страховки
-export function handleInsuranceSelection(ctx, insuranceType) {
+export async function handleInsuranceSelection(ctx, insuranceType) {
   const userId = ctx.from.id;
 
   console.log(`[DEBUG] handleInsuranceSelection - userId: ${userId}, insuranceType: ${insuranceType}`);
@@ -57,14 +66,13 @@ export function handleInsuranceSelection(ctx, insuranceType) {
     data: {}
   };
 
-  userStates.set(userId, newState);
+  await setUserState(userId, newState);
 
   console.log(`[DEBUG] Состояние пользователя ${userId} установлено:`, JSON.stringify(newState, null, 2));
-  console.log(`[DEBUG] Проверяем сохранение - текущее состояние:`, JSON.stringify(userStates.get(userId), null, 2));
 
   const insuranceName = insuranceTypes[insuranceType];
 
-  ctx.reply(
+  await ctx.reply(
     `Ви обрали: ${insuranceName}\n\n` +
     'Будь ласка введіть ваше імʼя та прізвище \n' +
     'Приклад: Ivan Prokopenko',
@@ -148,31 +156,13 @@ export function validateContact(contact) {
   return { isValid: true, value: trimmedContact };
 }
 
-// Получение состояния пользователя
-export function getUserState(userId) {
-  return userStates.get(userId);
-}
-
-// Обновление состояния пользователя
-export function updateUserState(userId, updates) {
-  const currentState = userStates.get(userId) || { step: null, data: {} };
-  const newState = { ...currentState, ...updates };
-  userStates.set(userId, newState);
-  return newState;
-}
-
-// Очистка состояния пользователя
-export function clearUserState(userId) {
-  userStates.delete(userId);
-}
-
-// Функция для отправки уведомления администратору
+// Функция для отправки уведомления администратору.
+// Возвращает true, если уведомление успешно доставлено, иначе false —
+// чтобы вызывающий код мог не потерять заявку молча.
 export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType, userId, userName) {
-  // const adminId = process.env.ADMIN_ID;
-
   if (!adminId || adminId === 'YOUR_ADMIN_ID_HERE') {
-    console.log('⚠️ ADMIN_ID не настроен в .env файле');
-    return;
+    console.error('⚠️ ADMIN_ID не настроен — заявку некому отправить!');
+    return false;
   }
 
   // Форматируем дату и время
@@ -213,8 +203,10 @@ export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType
   try {
     await bot.telegram.sendMessage(adminId, adminMessage);
     console.log(`✅ Уведомление администратору отправлено для заявки пользователя ${userId}`);
+    return true;
   } catch (error) {
     console.error('❌ Ошибка отправки уведомления администратору:', error);
+    return false;
   }
 }
 
@@ -222,15 +214,15 @@ export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType
 export async function finalizeOrder(ctx, bot) {
   const userId = ctx.from.id;
   const userName = ctx.from.username;
-  const userState = getUserState(userId);
+  const userState = await getUserState(userId);
 
   if (!userState || userState.step !== orderSteps.CONFIRMATION) {
-    ctx.reply('❌ Помилка: дані замовлення не знайдено. Почніть заново.');
+    await ctx.reply('❌ Помилка: дані замовлення не знайдено. Почніть заново — /start.');
     return;
   }
 
   // Отправляем уведомление администратору
-  await sendOrderNotificationToAdmin(
+  const notified = await sendOrderNotificationToAdmin(
     bot,
     userState.data,
     userState.insuranceType,
@@ -238,8 +230,35 @@ export async function finalizeOrder(ctx, bot) {
     userName
   );
 
+  // Если заявку не удалось доставить — НЕ теряем её молча:
+  // логируем полные данные и даём пользователю повторить, не очищая состояние.
+  if (!notified) {
+    console.error(
+      '❌ ЗАЯВКА НЕ ДОСТАВЛЕНА адміну. Дані для ручного відновлення:',
+      JSON.stringify({
+        userId,
+        userName,
+        insuranceType: userState.insuranceType,
+        ...userState.data
+      })
+    );
+
+    await ctx.reply(
+      '⚠️ Не вдалося відправити заявку. Спробуйте ще раз за мить.',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔄 Спробувати ще раз', callback_data: 'confirm_order' }],
+            [{ text: '🏠 Головне меню', callback_data: 'main_menu' }]
+          ]
+        }
+      }
+    );
+    return;
+  }
+
   // Очищаем состояние пользователя
-  clearUserState(userId);
+  await clearUserState(userId);
 
   // Уведомляем пользователя об успешной отправке
   const successMessage = `

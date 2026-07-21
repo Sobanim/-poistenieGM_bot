@@ -30,36 +30,42 @@ export function setupBotHandlers(bot) {
   });
 
   // Обработка текстовых сообщений для заказов
-  bot.on('text', (ctx) => {
+  bot.on('text', async (ctx) => {
     console.log(`[DEBUG] Получено текстовое сообщение от пользователя ${ctx.from.id}: "${ctx.message.text}"`);
 
-    const handled = handleOrderTextMessage(ctx);
-    console.log(`[DEBUG] Сообщение обработано в процессе заказа: ${handled}`);
+    try {
+      const handled = await handleOrderTextMessage(ctx);
+      console.log(`[DEBUG] Сообщение обработано в процессе заказа: ${handled}`);
 
-    if (!handled) {
-      console.log(`[DEBUG] Отправляем стандартный ответ пользователю ${ctx.from.id}`);
-      ctx.reply(
-        'Використовуйте кнопки меню для навігації або введіть /start для початку.',
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🏠 Головне меню', callback_data: 'main_menu' }]
-            ]
+      if (!handled) {
+        console.log(`[DEBUG] Отправляем стандартный ответ пользователю ${ctx.from.id}`);
+        await ctx.reply(
+          'Використовуйте кнопки меню для навігації або введіть /start для початку.',
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🏠 Головне меню', callback_data: 'main_menu' }]
+              ]
+            }
           }
-        }
-      );
+        );
+      }
+    } catch (error) {
+      console.error(`[ERROR] Ошибка обработки текста от пользователя ${ctx.from.id}:`, error);
     }
   });
 
   // Обработка контактов
-  bot.on('contact', (ctx) => {
+  bot.on('contact', async (ctx) => {
     console.log(`[DEBUG] Получен контакт от пользователя ${ctx.from.id}`);
-    ctx.reply('Дякую! Контакт отримано.', {
-      reply_markup: { remove_keyboard: true }
-    });
-    handlePhoneContact(ctx).catch((error) => {
+    try {
+      await ctx.reply('Дякую! Контакт отримано.', {
+        reply_markup: { remove_keyboard: true }
+      });
+      await handlePhoneContact(ctx);
+    } catch (error) {
       console.error(`[ERROR] Ошибка обработки контакта от пользователя ${ctx.from.id}:`, error);
-      ctx.reply('❌ Сталася помилка при обробці вашого контакту. Спробуйте ще раз.')
-    })
+      await ctx.reply('❌ Сталася помилка при обробці вашого контакту. Спробуйте ще раз.');
+    }
   });
 }
