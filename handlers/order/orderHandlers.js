@@ -6,6 +6,9 @@ import {
   updateUserState,
   clearUserState
 } from './stateStore.js';
+// adminId берётся из общего модуля окружения, чтобы работал dev-режим
+// (DEV_ADMIN_ID при NODE_ENV=development). См. config/env.js.
+import { adminId } from '../../config/env.js';
 
 export { getUserState, updateUserState, clearUserState };
 
@@ -157,8 +160,6 @@ export function validateContact(contact) {
 // Возвращает true, если уведомление успешно доставлено, иначе false —
 // чтобы вызывающий код мог не потерять заявку молча.
 export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType, userId, userName) {
-  const adminId = process.env.ADMIN_ID;
-
   if (!adminId || adminId === 'YOUR_ADMIN_ID_HERE') {
     console.error('⚠️ ADMIN_ID не настроен — заявку некому отправить!');
     return false;
