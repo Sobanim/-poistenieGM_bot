@@ -1,4 +1,6 @@
 // Хранилище состояний пользователей (в продакшне лучше использовать базу данных)
+import { adminId } from "../../config/env.js";
+
 const userStates = new Map();
 
 // Типы страховок для заказа
@@ -166,7 +168,7 @@ export function clearUserState(userId) {
 
 // Функция для отправки уведомления администратору
 export async function sendOrderNotificationToAdmin(bot, orderData, insuranceType, userId, userName) {
-  const adminId = process.env.ADMIN_ID;
+  // const adminId = process.env.ADMIN_ID;
 
   if (!adminId || adminId === 'YOUR_ADMIN_ID_HERE') {
     console.log('⚠️ ADMIN_ID не настроен в .env файле');
