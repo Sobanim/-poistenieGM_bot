@@ -1,12 +1,6 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import { Telegraf } from 'telegraf';
 import { setupBotHandlers } from './config/botHandlers.js';
-
-// Определяем переменные в зависимости от режима
-const isDevelopment = process.env.NODE_ENV === 'development';
-const botToken = isDevelopment ? process.env.DEV_BOT_TOKEN : process.env.BOT_TOKEN;
-export const adminId = isDevelopment ? process.env.DEV_ADMIN_ID : process.env.ADMIN_ID;
+import { botToken, adminId, isDevelopment } from './config/env.js';
 
 const bot = new Telegraf(botToken);
 

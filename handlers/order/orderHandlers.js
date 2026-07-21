@@ -1,5 +1,5 @@
 // Хранилище состояний пользователей (в продакшне лучше использовать базу данных)
-import { adminId } from "../../index.js";
+import { adminId } from "../../config/env.js";
 
 const userStates = new Map();
 

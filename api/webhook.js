@@ -1,12 +1,15 @@
 import { Telegraf } from 'telegraf';
 import { setupBotHandlers } from '../config/botHandlers.js';
+import { botToken, adminId, isDevelopment } from '../config/env.js';
 
 // Создаем экземпляр бота
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(botToken);
 
 // Добавляем экземпляр бота в контекст для использования в обработчиках
 bot.use((ctx, next) => {
   ctx.bot = bot;
+  ctx.adminId = adminId;
+  ctx.isDevelopment = isDevelopment;
   return next();
 });
 
