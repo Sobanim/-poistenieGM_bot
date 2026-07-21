@@ -1,82 +1,82 @@
-# Деплой Telegram бота на Vercel
+# Deploying the Telegram Bot to Vercel
 
-Этот проект адаптирован для работы на Vercel как serverless приложение.
+This project is adapted to run on Vercel as a serverless application.
 
-## Структура проекта для Vercel
+## Project structure for Vercel
 
-- `api/webhook.js` - основная функция для обработки webhook'ов от Telegram
-- `api/status.js` - функция для проверки статуса бота
-- `api/setup-webhook.js` - функция для установки webhook'а
-- `vercel.json` - конфигурация Vercel
+- `api/webhook.js` - main function that handles webhooks from Telegram
+- `api/status.js` - function for checking the bot's status
+- `api/setup-webhook.js` - function for setting up the webhook
+- `vercel.json` - Vercel configuration
 
-## Настройка и деплой
+## Setup and deployment
 
-### 1. Установите Vercel CLI (если еще не установлен)
+### 1. Install the Vercel CLI (if not already installed)
 ```bash
 npm i -g vercel
 ```
 
-### 2. Логинитесь в Vercel
+### 2. Log in to Vercel
 ```bash
 vercel login
 ```
 
-### 3. Деплой проекта
+### 3. Deploy the project
 ```bash
 vercel
 ```
 
-### 4. Настройка переменных окружения в Vercel (опционально)
+### 4. Configure environment variables in Vercel (optional)
 
-В настройках проекта на Vercel можете добавить:
-- `BOT_TOKEN` - токен вашего Telegram бота
+In the project settings on Vercel you can add:
+- `BOT_TOKEN` - your Telegram bot token
 
-### 5. Установка webhook'а
+### 5. Set up the webhook
 
-После деплоя есть несколько способов установить webhook:
+After deployment there are several ways to set up the webhook:
 
-**Способ 1: Через API функцию (рекомендуется)**
+**Option 1: Via the API function (recommended)**
 ```bash
 curl -X POST "https://your-project.vercel.app/api/setup-webhook" \
      -H "Content-Type: application/json" \
      -d '{"botToken": "YOUR_BOT_TOKEN"}'
 ```
 
-**Способ 2: Если добавили BOT_TOKEN в переменные Vercel**
+**Option 2: If BOT_TOKEN was added to Vercel's environment variables**
 ```bash
 curl -X POST "https://your-project.vercel.app/api/setup-webhook"
 ```
 
-**Способ 3: Напрямую через Telegram API**
+**Option 3: Directly via the Telegram API**
 ```
 https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook?url=https://your-project.vercel.app/api/webhook
 ```
 
-## Проверка работы
+## Verifying it works
 
-- Статус бота: `https://your-project.vercel.app/api/status`
+- Bot status: `https://your-project.vercel.app/api/status`
 - Webhook endpoint: `https://your-project.vercel.app/api/webhook`
-- Справка по установке webhook: `https://your-project.vercel.app/api/setup-webhook`
+- Webhook setup help: `https://your-project.vercel.app/api/setup-webhook`
 
-## Основные преимущества Vercel
+## Main advantages of Vercel
 
-1. **Serverless архитектура**: Функции запускаются только при необходимости
-2. **Нет проблем с засыпанием**: В отличие от Render, функции не "засыпают"
-3. **Автоматическое масштабирование**: Обрабатывает любое количество пользователей
-4. **Быстрый деплой**: Автоматический деплой при пуше в Git
+1. **Serverless architecture**: functions only run when needed
+2. **No cold-sleep issues**: unlike Render, functions don't "go to sleep"
+3. **Automatic scaling**: handles any number of users
+4. **Fast deployment**: automatic deploy on push to Git
 
-## Локальная разработка
+## Local development
 
-Для тестирования локально:
+To test locally:
 ```bash
 npm run vercel-dev
 ```
 
-Это запустит локальный сервер Vercel для разработки.
+This starts a local Vercel dev server.
 
-## Ограничения Vercel
+## Vercel limitations
 
-- Максимальное время выполнения функции: 10 секунд (Hobby план)
-- Максимальный размер запроса: 4.5MB
+- Maximum function execution time: 10 seconds (Hobby plan)
+- Maximum request size: 4.5MB
 
-Для большинства Telegram ботов этих ограничений достаточно.
+These limits are sufficient for most Telegram bots.

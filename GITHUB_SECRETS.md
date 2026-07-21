@@ -1,38 +1,38 @@
-# Секреты для GitHub Actions
+# Secrets for GitHub Actions
 
-## ГДЕ ДОБАВЛЯТЬ В GITHUB:
+## WHERE TO ADD THEM ON GITHUB:
 Settings > Secrets and variables > Actions > New repository secret
 
-## КАКИЕ СЕКРЕТЫ НУЖНЫ В GITHUB:
+## WHICH SECRETS ARE NEEDED ON GITHUB:
 
 ### 1. BOT_TOKEN
-Имя: BOT_TOKEN  
-Значение: 8374658030:AAGic3F9KTovkklZcxq-Bq1chzteSqB3_6E
+Name: BOT_TOKEN
+Value: your Telegram bot token
 
-### 2. VERCEL_TOKEN  
-Имя: VERCEL_TOKEN
-Как получить:
-- Идите на https://vercel.com/account/tokens
-- Нажмите "Create Token"
-- Скопируйте созданный токен
+### 2. VERCEL_TOKEN
+Name: VERCEL_TOKEN
+How to get it:
+- Go to https://vercel.com/account/tokens
+- Click "Create Token"
+- Copy the generated token
 
 ### 3. VERCEL_ORG_ID
-Имя: VERCEL_ORG_ID  
-Как получить:
-- Идите в ваш проект на Vercel: https://vercel.com/dashboard
-- Выберите проект "poistenie-gm-bot"  
+Name: VERCEL_ORG_ID
+How to get it:
+- Go to your project on Vercel: https://vercel.com/dashboard
+- Select the "poistenie-gm-bot" project
 - Settings > General
-- Найдите "Team ID" (если личный аккаунт, то "Personal Account ID")
+- Find "Team ID" (or "Personal Account ID" for a personal account)
 
 ### 4. VERCEL_PROJECT_ID
-Имя: VERCEL_PROJECT_ID
-Как получить:
-- Там же в Settings > General
-- Найдите "Project ID"
+Name: VERCEL_PROJECT_ID
+How to get it:
+- Same place, Settings > General
+- Find "Project ID"
 
 ---
 
-## В VERCEL НИЧЕГО ДОБАВЛЯТЬ НЕ НУЖНО!
+## NOTHING NEEDS TO BE ADDED IN VERCEL!
 
-GitHub Action сам задеплоит проект и установит webhook.
-Vercel переменные нужны только если хотите добавить BOT_TOKEN в Vercel для удобства (необязательно).
+The GitHub Action deploys the project and sets up the webhook by itself.
+Vercel environment variables are only needed if you want to add BOT_TOKEN to Vercel for convenience (optional).
