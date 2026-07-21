@@ -4,7 +4,7 @@ import { botToken, adminId, isDevelopment } from './config/env.js';
 
 const bot = new Telegraf(botToken);
 
-// Добавляем переменные в контекст для использования в обработчиках
+// Add variables to the context for use in handlers
 bot.use((ctx, next) => {
   ctx.bot = bot;
   ctx.adminId = adminId;
@@ -12,14 +12,14 @@ bot.use((ctx, next) => {
   return next();
 });
 
-// Настраиваем обработчики через общую функцию
+// Set up handlers via the shared function
 setupBotHandlers(bot);
 
 bot.launch().then(() => {
-  console.log('Бот запущен!');
-  console.log('Ожидание сообщений...');
-  console.log('ID бота:', bot.botInfo?.id || 'Не получен');
-  console.log('Username бота:', bot.botInfo?.username || 'Не получен');
+  console.log('Bot started!');
+  console.log('Waiting for messages...');
+  console.log('Bot ID:', bot.botInfo?.id || 'Not received');
+  console.log('Bot username:', bot.botInfo?.username || 'Not received');
 }).catch((err) => {
-  console.error('Ошибка запуска бота:', err);
+  console.error('Bot startup error:', err);
 });

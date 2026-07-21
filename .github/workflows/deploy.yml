@@ -30,7 +30,7 @@ jobs:
 
       - name: Setup Telegram Webhook
         run: |
-          sleep 10  # Ждем пока деплой завершится
+          sleep 10  # Wait for the deployment to finish
           curl -X POST "https://poistenie-gm-bot.vercel.app/api/setup-webhook" \
                -H "Content-Type: application/json" \
                -d '{"botToken": "${{ secrets.BOT_TOKEN }}"}'

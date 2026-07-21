@@ -5,35 +5,35 @@ dotenv.config();
 
 async function setupWebhook() {
   try {
-    // Используем ваш токен напрямую для удобства
+    // Use the token directly for convenience
     const botToken = process.env.BOT_TOKEN;
     const bot = new Telegraf(botToken);
 
-    // Автоматически определяем URL проекта
+    // Automatically determine the project URL
     const webhookUrl = process.env.WEBHOOK_URL;
 
-    console.log('🔧 Устанавливаем webhook на:', webhookUrl);
+    console.log('🔧 Setting webhook to:', webhookUrl);
 
     await bot.telegram.setWebhook(webhookUrl);
-    console.log('✅ Webhook установлен успешно!');
+    console.log('✅ Webhook set successfully!');
 
-    // Получаем информацию о боте для проверки
+    // Get bot info to verify
     const botInfo = await bot.telegram.getMe();
-    console.log('🤖 Информация о боте:', {
+    console.log('🤖 Bot info:', {
       id: botInfo.id,
       username: `@${botInfo.username}`,
       first_name: botInfo.first_name
     });
 
-    // Проверяем webhook
+    // Verify the webhook
     const webhookInfo = await bot.telegram.getWebhookInfo();
-    console.log('🌐 Информация о webhook:', {
+    console.log('🌐 Webhook info:', {
       url: webhookInfo.url,
       pending_updates: webhookInfo.pending_update_count
     });
 
   } catch (error) {
-    console.error('❌ Ошибка при установке webhook:', error);
+    console.error('❌ Error setting webhook:', error);
     process.exit(1);
   }
 }

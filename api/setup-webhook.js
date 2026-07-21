@@ -8,7 +8,7 @@ export default async function handler(req, res) {
         usage: {
           method: 'POST',
           body: '{"botToken": "your_bot_token"}',
-          note: 'Или используйте переменную окружения BOT_TOKEN в Vercel'
+          note: 'Or use the BOT_TOKEN environment variable in Vercel'
         }
       });
     }
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // Пытаемся получить токен из тела запроса или переменных окружения
+    // Try to get the token from the request body or environment variables
     const { botToken } = req.body;
     const token = botToken || process.env.BOT_TOKEN;
 
@@ -25,8 +25,8 @@ export default async function handler(req, res) {
       return res.status(400).json({
         error: 'BOT_TOKEN is required',
         options: [
-          'Передайте в JSON: {"botToken": "your_bot_token"}',
-          'Или установите переменную BOT_TOKEN в настройках Vercel'
+          'Pass it in JSON: {"botToken": "your_bot_token"}',
+          'Or set the BOT_TOKEN environment variable in Vercel settings'
         ]
       });
     }
@@ -34,17 +34,17 @@ export default async function handler(req, res) {
     const bot = new Telegraf(token);
     const webhookUrl = `https://${req.headers.host}/api/webhook`;
 
-    console.log('🔧 Устанавливаем webhook на:', webhookUrl);
+    console.log('🔧 Setting webhook to:', webhookUrl);
 
     await bot.telegram.setWebhook(webhookUrl);
 
-    // Проверяем установку
+    // Verify the setup
     const webhookInfo = await bot.telegram.getWebhookInfo();
     const botInfo = await bot.telegram.getMe();
 
     return res.status(200).json({
       success: true,
-      message: 'Webhook установлен успешно!',
+      message: 'Webhook set successfully!',
       bot: {
         id: botInfo.id,
         username: `@${botInfo.username}`,
@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('❌ Ошибка установки webhook:', error);
+    console.error('❌ Error setting webhook:', error);
     return res.status(500).json({
       success: false,
       error: error.message

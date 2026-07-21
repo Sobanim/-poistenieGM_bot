@@ -1,6 +1,6 @@
 # Insurance Consultation Bot for Slovakia
 
-A Telegram bot that provides information about insurance options for Ukrainian citizens settling in Slovakia. The bot helps users understand different types of insurance policies required for residence in Slovakia.
+A Telegram bot that provides information about insurance options for Ukrainian citizens settling in Slovakia. The bot helps users understand different types of insurance policies required for residence in Slovakia, and lets them submit an order request.
 
 ## Features
 
@@ -10,25 +10,39 @@ A Telegram bot that provides information about insurance options for Ukrainian c
   - 🇸🇰 Slovak Emergency Insurance (AXA)
   - 🇸🇰 Slovak Medical Insurance (Union)
   - 🌍 International Life Risk Insurance
-- **Multilingual Support**: Currently supports Ukrainian interface
-- **Consultation Requests**: Users can request consultations (feature in development)
+- **Order Flow**: Step-by-step collection of name, age, and contact info, with the finished request sent to the admin on Telegram
+- **Multilingual Support**: Currently supports a Ukrainian interface
+- **Dual Runtime**: Runs either as a local long-polling process or as a Vercel serverless webhook
 
 ## Project Structure
 
 ```
-├── index.js                    # Main bot entry point
-├── server.js                   # Server configuration
-├── package.json               # Project dependencies
+├── index.js                        # Local entry point (long-polling, bot.launch())
+├── setup-webhook.js                # CLI script to set the webhook from env vars
+├── api/
+│   ├── webhook.js                  # Production entry point (Vercel serverless webhook)
+│   ├── setup-webhook.js            # Public endpoint to set the Telegram webhook
+│   └── status.js                   # Public endpoint to check bot/webhook status
+├── config/
+│   ├── env.js                      # Environment/credentials resolution
+│   └── botHandlers.js              # Shared bot handler wiring (used by index.js and api/webhook.js)
 ├── handlers/
-│   ├── basicHandlers.js       # Core bot handlers (start, callbacks)
-│   └── insuranceDetails.js    # Insurance information data
-└── README.md                  # Project documentation
+│   ├── basicHandlers.js            # /start, main menu, callback routing
+│   ├── insuranceDetails.js         # Insurance description texts
+│   └── order/
+│       ├── orderHandlers.js        # Order state, validation, admin notification
+│       └── orderTextHandlers.js    # Step-by-step text input handling
+├── assets/images/                  # Static assets (e.g. sample policy image)
+├── index.html                      # Simple landing page
+├── vercel.json                     # Vercel configuration
+├── .github/workflows/deploy.yml    # CI: deploy to Vercel + set up the webhook
+└── package.json                    # Project dependencies and scripts
 ```
 
 ## Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn package manager
+- Node.js (v18 or higher)
+- npm package manager
 - Telegram Bot Token (obtain from @BotFather)
 
 ## Installation
@@ -48,11 +62,15 @@ A Telegram bot that provides information about insurance options for Ukrainian c
    Create a `.env` file in the root directory:
    ```env
    BOT_TOKEN=your_telegram_bot_token_here
+   ADMIN_ID=your_telegram_user_id_here
+   # Optional, used for a separate dev bot when NODE_ENV=development
+   DEV_BOT_TOKEN=your_dev_bot_token_here
+   DEV_ADMIN_ID=your_dev_admin_id_here
    ```
 
-4. **Run the bot**:
+4. **Run the bot locally** (long-polling):
    ```bash
-   npm start
+   npm run dev
    ```
 
 ## Dependencies
@@ -104,15 +122,21 @@ The project uses the following main dependencies:
 
 ## Deployment
 
-The bot can be deployed on various platforms:
+The bot is deployed to **Vercel** as a serverless webhook (see `api/webhook.js`). Pushing to
+`main` triggers `.github/workflows/deploy.yml`, which deploys to Vercel and re-registers the
+webhook automatically. See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for manual setup and
+[GITHUB_SECRETS.md](GITHUB_SECRETS.md) for the CI secrets required.
 
-- **Heroku**: Add `Procfile` with `web: node index.js`
-- **Railway**: Direct deployment with automatic builds
-- **VPS**: Use PM2 for process management
+Note that state is currently kept in an in-memory `Map` (see `handlers/order/orderHandlers.js`),
+which is not reliable across serverless invocations — see [PROJECT_AUDIT.md](PROJECT_AUDIT.md)
+for known issues and a fix plan.
 
 ## Environment Variables
 
 - `BOT_TOKEN`: Your Telegram bot token from @BotFather
+- `ADMIN_ID`: Telegram user ID that receives new order notifications
+- `NODE_ENV`: Set to `development` to use `DEV_BOT_TOKEN`/`DEV_ADMIN_ID` instead
+- `DEV_BOT_TOKEN` / `DEV_ADMIN_ID`: Optional separate bot/admin used during local development
 
 ## Contributing
 
@@ -124,7 +148,7 @@ The bot can be deployed on various platforms:
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the ISC License.
 
 ## Support
 
